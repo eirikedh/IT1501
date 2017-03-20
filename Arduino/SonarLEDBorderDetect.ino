@@ -49,13 +49,13 @@ void loop() {
 
   // check if inside range for action
   if (! distance > 0) { // sonar gives zero when outside range
-    // No object in front, turn around
+    // If no object in front, turn around untill detecting
     digitalWrite(ledPin,LOW); 
     motors.setSpeeds(-2*FORWARD_SPEED, 2*FORWARD_SPEED);
   } 
   
   else if (distance > 0) {
-    // Object detected
+    // If object detected
     digitalWrite(ledPin,HIGH);
     // Drive towards object
     motors.setSpeeds(FORWARD_SPEED,FORWARD_SPEED);
@@ -70,7 +70,6 @@ void loop() {
     motors.setSpeeds(TURN_SPEED, -TURN_SPEED);
     delay(TURN_DURATION);
     motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
-    //turn(RIGHT);
   }
   
   else if (sensor_values[5] > QTR_THRESHOLD) {
@@ -80,30 +79,6 @@ void loop() {
     motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
     delay(TURN_DURATION);
     motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
-    //turn(LEFT);
   }
 
 }
-
-void turn(int direction){ 
-  // Move Zumo backwards, then turn in given direction,
-  // and continue forward
-  // Check wich direction to turn
-  if (direction == RIGHT) {
-    motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
-    delay(REVERSE_DURATION);
-    motors.setSpeeds(TURN_SPEED, -TURN_SPEED);
-    delay(TURN_DURATION);
-    motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
-  }
-  
-  else { // turn left
-    motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
-    delay(REVERSE_DURATION);
-    motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
-    delay(TURN_DURATION);
-    motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
-  }  
-  
-}
-
