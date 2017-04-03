@@ -11,14 +11,13 @@
 #define LED 13
 #define FORWARD_SPEED 400
 #define REVERSE_SPEED 200
-#define TURN_SPEED 200
-#define SONAR_RANGE 50 // in cm
+#define TURN_SPEED 250
 #define NUM_SENSORS 6
 
 const int echoPin = 3; // GRØNN KABEL 
 const int triggerPin = 6; // GUL KABEL 
 const int ledPin = A1; // ORANSJE KABEL
-const int maxDistance = 30; // Limit for action in cm
+const int maxDistance = 60; // in cm
 long distance, time;
 char val;
 
@@ -26,7 +25,7 @@ unsigned int sensor_values[NUM_SENSORS];
 ZumoMotors motors;
 Pushbutton button(ZUMO_BUTTON); 
 // Initialize "sonar" with trigger pin, echo pin and sonar range
-NewPing sonar(triggerPin, echoPin, SONAR_RANGE);
+NewPing sonar(triggerPin, echoPin, maxDistance);
 // Tell Zumo that we have no emitter-pin
 ZumoReflectanceSensorArray sensors(QTR_NO_EMITTER_PIN); 
 
@@ -43,27 +42,23 @@ void loop() {
 //  if(Serial.available()) {
 //    val = Serial.read();
 //  }
-//
-//  if (val == 'd') {
-//    checkDistance();
-//  }
 //  
 //  if (val == 's') {
 //    checkSensor();
 //  }
 //  
 //  if (val == 'f') {
-//    checkDistanceSensor();
+//    fightOn();
 //  }
 
-  fightOn();
-   
+  fightOn(); 
 }
 
 
 void fightOn() {
   checkDistance();
   sensors.read(sensor_values);
+  Serial.println(distance);
   
   // Hvis sensor 0 merker noe:
   if (sensor_values[0] < QTR_THRESHOLD) {
@@ -78,8 +73,8 @@ void fightOn() {
     if (!distance > 0) { // No object in front
       motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
     } 
-    else if (distance > 0) { // Object detected
-      motors.setSpeeds(FORWARD_SPEED,FORWARD_SPEED);
+    else { // Object detected
+      motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
     }
   }
 }
@@ -96,9 +91,9 @@ void sensor0() {
   motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
   delay(150);
   motors.setSpeeds(TURN_SPEED, -TURN_SPEED);   
-  delay(300);
+  delay(400);
   motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED); 
-  delay(200);
+  delay(550);
 }
 
 void sensor5() {
@@ -106,9 +101,9 @@ void sensor5() {
   motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
   delay(150);
   motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
-  delay(300);
+  delay(400);
   motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
-  delay(200);
+  delay(550);
 }
 
 void checkSensor() {
