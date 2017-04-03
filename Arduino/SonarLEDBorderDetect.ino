@@ -9,14 +9,17 @@
 #define QTR_THRESHOLD  1800 // 
 
 #define LED 13
-#define FORWARD_SPEED     100
+#define FORWARD_SPEED 400
+#define REVERSE_SPEED 200
+#define TURN_SPEED 200
 #define SONAR_RANGE 50 // in cm
 #define NUM_SENSORS 6
 
-const int echoPin = 2; // GRØNN KABEL 
-const int triggerPin = 3; // GUL KABEL 
+const int echoPin = 3; // GRØNN KABEL 
+const int triggerPin = 6; // GUL KABEL 
 const int ledPin = A1; // ORANSJE KABEL
-const int maxDistance = 20; // Limit for action in cm
+const int maxDistance = 30; // Limit for action in cm
+long distance, time;
 char val;
 
 unsigned int sensor_values[NUM_SENSORS];
@@ -37,45 +40,76 @@ void setup() {
 }
 
 void loop() {
-  if(Serial.available()) {
-    val = Serial.read();
-  }
+//  if(Serial.available()) {
+//    val = Serial.read();
+//  }
+//
+//  if (val == 'd') {
+//    checkDistance();
+//  }
+//  
+//  if (val == 's') {
+//    checkSensor();
+//  }
+//  
+//  if (val == 'f') {
+//    checkDistanceSensor();
+//  }
 
-  if (val == 'd') {
-    checkDistance();
-  }
-  
-  if (val == 's') {
-    checkSensor();
-  }
-  
-  if (val == 'a') {
-    checkDistanceSensor();
-  }
-  
-  //checkDistance();
-  //checkSensor();
-  //checkDistanceSensor();
+  fightOn();
    
+}
+
+
+void fightOn() {
+  checkDistance();
+  sensors.read(sensor_values);
+  
+  // Hvis sensor 0 merker noe:
+  if (sensor_values[0] < QTR_THRESHOLD) {
+    sensor0();
+  }
+  // Hvis sensor 5 merker noe:
+  else if (sensor_values[5] < QTR_THRESHOLD) {
+    sensor5();
+  }
+  // Hvis INGEN sensor merker noe:
+  else {
+    if (!distance > 0) { // No object in front
+      motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
+    } 
+    else if (distance > 0) { // Object detected
+      motors.setSpeeds(FORWARD_SPEED,FORWARD_SPEED);
+    }
+  }
 }
 
 
 void checkDistance() {
   // Read distance to obstacle, if any 
-  unsigned int time = sonar.ping();
-  float distance = sonar.convert_cm(time);
-  // check if inside range for action  
-  if (!distance > 0) { // No object in front
-    digitalWrite(ledPin, LOW); 
-    motors.setSpeeds(-2*FORWARD_SPEED, 2*FORWARD_SPEED);
-  } 
-  else if (distance > 0) { // Object detected
-    digitalWrite(ledPin,HIGH);
-    // Drive towards object
-    motors.setSpeeds(FORWARD_SPEED,FORWARD_SPEED);
-  }
+  time = sonar.ping();
+  distance = sonar.convert_cm(time);
 }
 
+void sensor0() {
+  // if leftmost sensor detects line, reverse and turn to the right
+  motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
+  delay(150);
+  motors.setSpeeds(TURN_SPEED, -TURN_SPEED);   
+  delay(300);
+  motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED); 
+  delay(200);
+}
+
+void sensor5() {
+  // if rightmost sensor detects line, reverse and turn to the left
+  motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
+  delay(150);
+  motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
+  delay(300);
+  motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
+  delay(200);
+}
 
 void checkSensor() {
   // Read IR-sensors and check if border detected
@@ -87,57 +121,6 @@ void checkSensor() {
     sensor5();
   }
   if (!(sensor_values[0] > QTR_THRESHOLD) and !(sensor_values[0] > QTR_THRESHOLD)) {
-    motors.setSpeeds(-2*FORWARD_SPEED, 2*FORWARD_SPEED);
+    motors.setSpeeds(-TURN_SPEED, TURN_SPEED);
   }
 }
-
-
-void checkDistanceSensor() {
-  sensors.read(sensor_values);
-  unsigned int time = sonar.ping();
-  float distance = sonar.convert_cm(time);
-  // No object in front or sensor value detected
-  if (!(distance > 0) and !(sensor_values[0] > QTR_THRESHOLD) and !(sensor_values[5] > QTR_THRESHOLD)) { 
-    digitalWrite(ledPin, LOW); 
-    motors.setSpeeds(-2*FORWARD_SPEED, 2*FORWARD_SPEED);
-  } 
-  // Object detected
-  else if ((distance > 0) and !(sensor_values[0] > QTR_THRESHOLD) and !(sensor_values[5] > QTR_THRESHOLD)) { 
-    digitalWrite(ledPin,HIGH);
-    motors.setSpeeds(FORWARD_SPEED,FORWARD_SPEED);
-  }
-  // Sensor_value[0] detects
-  else if ((!distance > 0) and (sensor_values[0] > QTR_THRESHOLD) and (!sensor_values[5] > QTR_THRESHOLD)) {
-    digitalWrite(ledPin, LOW); 
-    sensor0();
-  }
-  // Sensor_value[5] detects
-  else if ((!distance > 0) and (!sensor_values[0] > QTR_THRESHOLD) and (sensor_values[5] > QTR_THRESHOLD)) {
-    digitalWrite(ledPin, LOW); 
-    sensor5();  
-  }
-  else {
-    digitalWrite(ledPin, LOW); 
-    motors.setSpeeds(-2*FORWARD_SPEED, 2*FORWARD_SPEED);
-  }
-
-}
-
-void sensor0() {
-  // if leftmost sensor detects line, reverse and turn to the right
-  motors.setSpeeds(-FORWARD_SPEED, -FORWARD_SPEED);
-  delay(FORWARD_SPEED);
-  motors.setSpeeds(FORWARD_SPEED, -FORWARD_SPEED);   
-  delay(FORWARD_SPEED);
-  motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED); 
-}
-
-void sensor5() {
-  // if rightmost sensor detects line, reverse and turn to the left
-  motors.setSpeeds(-FORWARD_SPEED, -FORWARD_SPEED);
-  delay(FORWARD_SPEED);
-  motors.setSpeeds(-FORWARD_SPEED, FORWARD_SPEED);
-  delay(FORWARD_SPEED);
-  motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
-}
-
