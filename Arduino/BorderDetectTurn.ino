@@ -1,7 +1,3 @@
-/*
-Drive forward and turn left or right when border is detected
-  - Only reflectionsensor 0 and 5 are used.
-*/
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
 #include <QTRSensors.h>
@@ -13,9 +9,9 @@ Drive forward and turn left or right when border is detected
 #define QTR_THRESHOLD  1800 // 
   
 // these might need to be tuned for different motor types
-#define REVERSE_SPEED     200 // 0 is stopped, 400 is full speed
-#define TURN_SPEED        300
-#define FORWARD_SPEED     200
+#define REVERSE_SPEED     400 // 0 is stopped, 400 is full speed
+#define TURN_SPEED        400
+#define FORWARD_SPEED     400
 #define REVERSE_DURATION  100 // ms
 #define TURN_DURATION     350 // ms
  
@@ -34,14 +30,13 @@ void setup()
 {
    sensors.init();
    button.waitForButton();
+   Serial.begin(9600);
 }
 
 void loop()
 {
   sensors.read(sensor_values);
-  digitalWrite(ledPin, HIGH);
-  if (sensor_values[0] > QTR_THRESHOLD) 
-  {
+  if (sensor_values[0] < QTR_THRESHOLD) { // SORT UNDERLAG
     // if leftmost sensor detects line, reverse and turn to the right
     motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
     delay(REVERSE_DURATION);
@@ -50,8 +45,7 @@ void loop()
     motors.setSpeeds(FORWARD_SPEED, FORWARD_SPEED);
   }
   
-  else if (sensor_values[5] > QTR_THRESHOLD)
-  {
+  else if (sensor_values[5] < QTR_THRESHOLD) {
     // if rightmost sensor detects line, reverse and turn to the left
     motors.setSpeeds(-REVERSE_SPEED, -REVERSE_SPEED);
     delay(REVERSE_DURATION);
